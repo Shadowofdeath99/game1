@@ -77,6 +77,17 @@ BODY_DATA = [
     {"id": "heart", "ar": "قلب", "en": "Heart", "fr": "Cœur", "emoji": "❤️", "desc": "ده قلبنا اللي بيحب ماما وبابا"}
 ]
 
+SHAPES_DATA = [
+    {"id": "circle",    "ar": "دائرة",   "color": "#e63946"},
+    {"id": "square",    "ar": "مربع",    "color": "#1d70b8"},
+    {"id": "triangle",  "ar": "مثلث",    "color": "#2a9d8f"},
+    {"id": "star",      "ar": "نجمة",    "color": "#ffd60a"},
+    {"id": "heart",     "ar": "قلب",     "color": "#ff70a6"},
+    {"id": "rectangle", "ar": "مستطيل",  "color": "#f77f00"},
+    {"id": "diamond",   "ar": "معين",    "color": "#9b5de5"},
+    {"id": "hexagon",   "ar": "سداسي",   "color": "#92400e"},
+]
+
 ENCOURAGEMENTS = [
     {"key": "enc_bravo", "cat": "تشجيع", "ar": "برافو عليكي يا حبيبتي!", "en": "Bravo!", "fr": "Bravo!"},
     {"key": "enc_smart", "cat": "تشجيع", "ar": "شاطرة جداً يا بطلة!", "en": "So smart!", "fr": "Très bien!"},
@@ -143,6 +154,16 @@ def get_all_questions():
             qs.append({"key": f"body_{b['id']}_{qtype}", "category": "body",
                        "category_ar": "جسم الإنسان", "subgroup": b["id"],
                        "subgroup_ar": b["ar"], "text_ar": text})
+    # أشكال
+    for s in SHAPES_DATA:
+        qs.append({"key": f"shp_{s['id']}_where", "category": "shapes",
+                   "category_ar": "أشكال", "subgroup": s["id"],
+                   "subgroup_ar": s["ar"], "text_ar": f"أين {s['ar']}؟"})
+    # أسئلة "فين راح؟"
+    qs.append({"key": "dis_look", "category": "disappear", "category_ar": "لعبة فين راح؟", "subgroup": None, "subgroup_ar": None, "text_ar": "بصي كويس"})
+    qs.append({"key": "dis_question", "category": "disappear", "category_ar": "لعبة فين راح؟", "subgroup": None, "subgroup_ar": None, "text_ar": "مين مش موجود؟"})
+    # أسئلة "مين المختلف؟"
+    qs.append({"key": "odd_question", "category": "odd", "category_ar": "لعبة مين المختلف؟", "subgroup": None, "subgroup_ar": None, "text_ar": "مين المختلف؟"})
     # حروف
     for lid, letter in ARABIC_LETTERS:
         qs.append({"key": f"let_{lid}_where", "category": "letters",
@@ -199,10 +220,50 @@ def get_dictionary():
         items.append({"key": f"num_{n['num']}", "cat": "أرقام", "ar": f"{n['ar']} - {n['combo']}", "en": n["en"], "fr": n["fr"]})
     for b in BODY_DATA:
         items.append({"key": f"body_{b['id']}", "cat": "جسم الإنسان", "ar": f"{b['ar']} ({b['desc']})", "en": b["en"], "fr": b["fr"]})
+    for s in SHAPES_DATA:
+        items.append({"key": f"shp_{s['id']}_where", "cat": "أشكال", "ar": s["ar"], "en": s["id"], "fr": s["id"]})
+    for lid, letter in ARABIC_LETTERS:
+        items.append({"key": f"let_{lid}_where", "cat": "حروف عربية", "ar": letter, "en": lid, "fr": lid})
+    items.append({"key": "dis_look", "cat": "فين راح؟", "ar": "بصي كويس", "en": "Look", "fr": "Regarde"})
+    items.append({"key": "dis_question", "cat": "فين راح؟", "ar": "مين مش موجود؟", "en": "Who is missing?", "fr": "Qui manque?"})
+    items.append({"key": "odd_question", "cat": "مين المختلف؟", "ar": "مين المختلف؟", "en": "Odd one out?", "fr": "Différent?"})
     return items
 
+
+def _render_game():
+    """يرندر game.html مع كل المتغيرات المطلوبة."""
+    animals = get_animals_list()
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute("SELECT item_key, file_path FROM voices").fetchall()
+    voices = {k: p for k, p in rows}
+    return render_template(
+        "game.html",
+        animals=animals,
+        colors=COLORS_DATA,
+        numbers=NUMBERS_DATA,
+        body_parts=BODY_DATA,
+        letters=ARABIC_LETTERS,
+        shapes=SHAPES_DATA,
+        voices=voices
+    )
+
+
 @app.route("/")
+@app.route("/game")
 def index():
+    """الصفحة الرئيسية: اللعبة مباشرة."""
+    return _render_game()
+
+
+@app.route("/admin")
+def admin():
+    """لوحة الإدارة الرئيسية."""
+    return render_template("admin_dashboard.html")
+
+
+@app.route("/admin/images")
+def admin_images():
+    """جلب الصور."""
     animals = get_animals_list()
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
@@ -215,11 +276,6 @@ def index():
     progress = {r["game_id"]: dict(r) for r in prog_rows}
     recorded_voices = {r["item_key"]: r["file_path"] for r in voices_rows}
 
-    all_imgs = sorted([
-        f"/static/animals/{f}" for f in os.listdir(ANIMALS_DIR)
-        if f.lower().endswith((".webp", ".jpg", ".jpeg", ".png"))
-    ])
-
     return render_template(
         "index.html",
         setup_done=setup_done,
@@ -229,22 +285,61 @@ def index():
         numbers=NUMBERS_DATA,
         body_parts=BODY_DATA,
         dictionary=get_dictionary(),
-        recorded_voices=recorded_voices,
-        images=all_imgs
+        recorded_voices=recorded_voices
     )
 
-@app.route("/game")
-def game():
-    animals = get_animals_list()
-    return render_template(
-        "game.html",
-        animals=animals,
-        colors=COLORS_DATA,
-        numbers=NUMBERS_DATA,
-        body_parts=BODY_DATA
-    )
+
+@app.route("/admin/stats")
+def admin_stats():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        progress = [dict(r) for r in conn.execute("SELECT * FROM progress").fetchall()]
+        voices_count = conn.execute("SELECT COUNT(*) FROM voices").fetchone()[0]
+    total_q = len(get_all_questions())
+    try:
+        animal_imgs = len([f for f in os.listdir(ANIMALS_DIR) if f.lower().endswith(('.webp','.jpg','.jpeg','.png'))])
+    except Exception:
+        animal_imgs = 0
+    total_stars = sum(p['stars'] for p in progress)
+    total_completed = sum(p['completed'] for p in progress)
+    return render_template("admin_stats.html",
+        progress=progress, voices_count=voices_count,
+        total_questions=total_q, animal_images=animal_imgs,
+        total_stars=total_stars, total_completed=total_completed)
+
+
+@app.route("/api/progress/clear", methods=["POST"])
+def api_progress_clear():
+    data = request.get_json(silent=True) or {}
+    game_id = data.get("game_id")
+    with sqlite3.connect(DB_PATH) as conn:
+        if game_id:
+            conn.execute("UPDATE progress SET completed=0, stars=0 WHERE game_id=?", (game_id,))
+        else:
+            conn.execute("UPDATE progress SET completed=0, stars=0")
+        conn.commit()
+    return jsonify({"status": "success"})
+
+
+@app.route("/api/recordings/clear", methods=["POST"])
+def api_recordings_clear():
+    removed = 0
+    if os.path.exists(VOICES_DIR):
+        for f in os.listdir(VOICES_DIR):
+            try:
+                os.remove(os.path.join(VOICES_DIR, f))
+                removed += 1
+            except Exception:
+                pass
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DELETE FROM voices")
+        conn.commit()
+    return jsonify({"status": "success", "removed": removed})
+
+
 
 def _fetch_wiki_image(animal):
+    """جلب صورة من Wikipedia REST API."""
     title = WIKI_MAP.get(animal, animal.capitalize())
     try:
         r = requests.get(
@@ -263,13 +358,16 @@ def _fetch_wiki_image(animal):
         pass
     return None
 
+
 def _save_square_webp(data, out_path):
+    """يحفظ الصورة كمربع 1024x1024 بصيغة webp."""
     img = Image.open(io.BytesIO(data)).convert("RGB")
     w, h = img.size
     s = min(w, h)
     l, t = (w - s) // 2, (h - s) // 2
     img = img.crop((l, t, l + s, t + s)).resize((1024, 1024), Image.LANCZOS)
     img.save(out_path, "WEBP", quality=85)
+
 
 @app.route("/api/fetch", methods=["POST"])
 def api_fetch():
@@ -338,7 +436,9 @@ def update_progress():
             new_comp = min(row["total"], row["completed"] + 1)
             new_stars = row["stars"] + add_star
             conn.execute("UPDATE progress SET completed=?, stars=? WHERE game_id=?", (new_comp, new_stars, game_id))
-            conn.commit()
+        else:
+            conn.execute("INSERT INTO progress (game_id, completed, total, stars) VALUES (?, 1, 5, ?)", (game_id, add_star))
+        conn.commit()
         all_rows = conn.execute("SELECT * FROM progress").fetchall()
     return jsonify({"status": "success", "progress": {r["game_id"]: dict(r) for r in all_rows}})
 

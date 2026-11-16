@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#ffb703">
+<title>🎈 لعبة صديقتي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--red:#e63946;--blue:#1d70b8;--yellow:#ffd60a;--green:#2a9d8f;--orange:#f77f00;--purple:#9b5de5;--pink:#ff70a6;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;overflow:hidden;font-family:'Tajawal',system-ui,sans-serif;user-select:none;background:linear-gradient(135deg,#ffe5b4,#ffd1dc,#c5e8ff);background-size:400% 400%;animation:bgShift 20s ease infinite;}
+@keyframes bgShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+#app{width:100%;height:100%;position:relative;}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:16px;overflow-y:auto;}
+.screen.active{display:flex;}
+#home{align-items:center;justify-content:center;text-align:center;gap:18px;}
+.home-title{font-size:clamp(26px,6.5vw,44px);font-weight:900;color:#fff;text-shadow:0 4px 0 var(--red),0 8px 20px rgba(0,0,0,.2);animation:bounce 2s infinite;cursor:pointer;}
+.home-sub{font-size:clamp(16px,4vw,24px);color:#6a4c93;font-weight:700;}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;width:100%;max-width:480px;margin-top:10px;}
+.game-card{aspect-ratio:1/1;border:none;border-radius:28px;background:#fff;box-shadow:0 8px 0 rgba(0,0,0,.15),0 12px 30px rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:clamp(16px,4vw,22px);font-weight:900;color:#333;cursor:pointer;transition:transform .15s;padding:10px;}
+.game-card:active{transform:scale(.95);}
+.game-card .icon{font-size:clamp(46px,11vw,68px);line-height:1;}
+.game-card[data-game="colors"]{background:linear-gradient(135deg,#ffe5e5,#fff);border:4px solid #ffb3b3;}
+.game-card[data-game="animals"]{background:linear-gradient(135deg,#e5f7ff,#fff);border:4px solid #b3e0ff;}
+.game-card[data-game="body"]{background:linear-gradient(135deg,#e5fff0,#fff);border:4px solid #b3ffd1;}
+.game-card[data-game="numbers"]{background:linear-gradient(135deg,#fff5e5,#fff);border:4px solid #ffd9a3;}
+#game{align-items:center;}
+.topbar{width:100%;max-width:600px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
+.icon-btn{width:60px;height:60px;border-radius:50%;border:none;background:#fff;font-size:28px;box-shadow:0 6px 0 rgba(0,0,0,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s;}
+.icon-btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.15);}
+.progress{display:flex;gap:6px;font-size:clamp(18px,5vw,26px);}
+.progress .star{opacity:.3;transition:opacity .3s;}
+.progress .star.filled{opacity:1;}
+.question-area{width:100%;max-width:600px;background:#fff;border-radius:28px;padding:18px;box-shadow:0 10px 0 rgba(0,0,0,.1),0 15px 30px rgba(0,0,0,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;min-height:130px;}
+.q-text{font-size:clamp(18px,4.5vw,26px);font-weight:700;color:#555;}
+.q-name{font-size:clamp(30px,7vw,46px);font-weight:900;color:#333;}
+.count-grid{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:340px;}
+.count-grid .item{font-size:clamp(28px,7vw,46px);line-height:1;}
+.options-area{width:100%;max-width:600px;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;flex:1;align-content:start;}
+.opt-btn{aspect-ratio:1/1;border:none;border-radius:24px;background:#fff;box-shadow:0 8px 0 rgba(0,0,0,.12),0 12px 25px rgba(0,0,0,.1);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:12px;transition:transform .1s;overflow:hidden;animation:popIn .4s ease backwards;}
+.opt-btn:nth-child(1){animation-delay:0s;}
+.opt-btn:nth-child(2){animation-delay:.06s;}
+.opt-btn:nth-child(3){animation-delay:.12s;}
+.opt-btn:nth-child(4){animation-delay:.18s;}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.opt-btn:active{transform:scale(.96);}
+.opt-btn .swatch{width:85%;height:85%;border-radius:50%;box-shadow:inset 0 -8px 0 rgba(0,0,0,.1);}
+.opt-btn .emoji{font-size:clamp(48px,13vw,86px);line-height:1;}
+.opt-btn .num{font-size:clamp(48px,13vw,86px);font-weight:900;color:#333;}
+.opt-btn .animal-img{width:100%;height:100%;object-fit:cover;border-radius:18px;}
+.opt-btn.correct{background:linear-gradient(135deg,#c8f7c5,#7bd77b);animation:pop .5s ease;}
+.opt-btn.wrong{animation:shake .5s ease;background:linear-gradient(135deg,#ffd6d6,#ffaaaa);}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.confetti{position:fixed;top:-20px;width:14px;height:14px;border-radius:3px;animation:fall 1.8s ease-in forwards;z-index:1000;pointer-events:none;}
+@keyframes fall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+#win{align-items:center;justify-content:center;text-align:center;gap:18px;}
+.win-trophy{font-size:clamp(100px,28vw,170px);animation:bounce 1.5s infinite;}
+.win-text{font-size:clamp(28px,7vw,46px);font-weight:900;color:#ff8c00;text-shadow:0 4px 0 rgba(0,0,0,.1);}
+.win-sub{font-size:clamp(18px,4.5vw,24px);color:#6a4c93;font-weight:700;}
+.big-btn{border:none;padding:18px 36px;border-radius:999px;background:linear-gradient(135deg,#ffb703,#fb8500);color:#fff;font-family:inherit;font-size:clamp(18px,4.5vw,24px);font-weight:900;box-shadow:0 8px 0 #b45f00,0 12px 25px rgba(0,0,0,.2);cursor:pointer;margin-top:8px;transition:transform .1s;}
+.big-btn:active{transform:translateY(4px);box-shadow:0 4px 0 #b45f00;}
+
+/* ============ MEMORY GAME ============ */
+.game-card[data-game="memory"]{background:linear-gradient(135deg,#f0e6ff,#fff);border:4px solid #d4b3ff;}
+.game-card[data-game="mix"]{background:linear-gradient(135deg,#fff0e0,#ffe0f0,#e0f0ff);border:4px solid #ffb3ff;}
+.q-badge{display:inline-block;background:linear-gradient(135deg,#9b5de5,#ff70a6);color:#fff;padding:6px 14px;border-radius:999px;font-size:clamp(13px,3vw,16px);font-weight:900;margin-bottom:8px;}
+.memory-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  width:100%;
+  max-width:520px;
+  margin:0 auto;
+}
+.memory-card{
+  aspect-ratio:1/1;
+  perspective:1000px;
+  cursor:pointer;
+}
+.memory-card-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  transition:transform .5s;
+  transform-style:preserve-3d;
+}
+.memory-card.flipped .memory-card-inner,
+.memory-card.matched .memory-card-inner{
+  transform:rotateY(180deg);
+}
+.memory-card-front, .memory-card-back{
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 0 rgba(0,0,0,.15), 0 8px 20px rgba(0,0,0,.15);
+}
+.memory-card-front{
+  background:linear-gradient(135deg,#9b5de5,#6a4c93);
+  font-size:clamp(40px,10vw,64px);
+  color:#fff;
+  font-weight:900;
+}
+.memory-card-back{
+  background:#fff;
+  transform:rotateY(180deg);
+  overflow:hidden;
+}
+.memory-card-back img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.memory-card.matched{
+  animation:matchPulse .6s ease;
+}
+.memory-card.matched .memory-card-back{
+  background:linear-gradient(135deg,#c8f7c5,#7bd77b);
+}
+.memory-card.matched .memory-card-inner{
+  opacity:.75;
+}
+@keyframes matchPulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.08);}
+}
+.game-card[data-game="shapes"]{background:linear-gradient(135deg,#e5fff0,#e0f0ff);border:4px solid #b3ffd1;}
+.opt-btn svg{width:82%;height:82%;}
+
+.game-card[data-game="disappear"]{background:linear-gradient(135deg,#fff8e0,#ffe8e0);border:4px solid #ffd6a5;}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:560px;margin:0 auto;padding:20px 0;animation:popIn .4s ease;}
+.ditem{aspect-ratio:1/1;border-radius:20px;overflow:hidden;box-shadow:0 8px 0 rgba(0,0,0,.12),0 10px 25px rgba(0,0,0,.15);background:#fff;animation:popIn .5s ease backwards;}
+.ditem:nth-child(1){animation-delay:0s;}
+.ditem:nth-child(2){animation-delay:.1s;}
+.ditem:nth-child(3){animation-delay:.2s;}
+.ditem img{width:100%;height:100%;object-fit:cover;display:block;}
+.dremaining{display:flex;gap:12px;justify-content:center;margin-top:8px;}
+.drem-img{width:clamp(60px,14vw,90px);height:clamp(60px,14vw,90px);border-radius:14px;object-fit:cover;box-shadow:0 4px 10px rgba(0,0,0,.2);}
+
+.game-card[data-game="odd"]{background:linear-gradient(135deg,#ffe0f0,#e0e8ff);border:4px solid #ffb3d1;}
+.odd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:520px;margin:0 auto;padding:10px 0;}
+.odd-grid .opt-btn{aspect-ratio:1/1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="home" class="screen active">
+    <h1 class="home-title" id="homeTitle">🎈 مرحباً يا صديقتي 🎈</h1>
+    <p class="home-sub">اختاري لعبة لنلعب معاً!</p>
+    <div class="menu-grid">
+      <button class="game-card" data-game="animals"><span class="icon">🐶</span><span>الحيوانات</span></button>
+      <button class="game-card" data-game="colors"><span class="icon">🎨</span><span>الألوان</span></button>
+      <button class="game-card" data-game="body"><span class="icon">👁️</span><span>جسمي</span></button>
+      <button class="game-card" data-game="numbers"><span class="icon">🔢</span><span>الأرقام</span></button>
+    
+      <button class="game-card" data-game="memory"><span class="icon">🧠</span><span>لعبة الذاكرة</span></button>
+      <button class="game-card" data-game="mix"><span class="icon">🎲</span><span>تحدي مختلط</span></button>
+      <button class="game-card" data-game="shapes"><span class="icon">🔺</span><span>الأشكال</span></button>
+      <button class="game-card" data-game="disappear"><span class="icon">🔍</span><span>فين راح؟</span></button>
+      <button class="game-card" data-game="odd"><span class="icon">🤔</span><span>مين المختلف؟</span></button>
+    </div>
+  </div>
+  <div id="game" class="screen">
+    <div class="topbar">
+      <button class="icon-btn" id="backBtn" aria-label="الرئيسية">🏠</button>
+      <div class="progress" id="progress"></div>
+      <button class="icon-btn" id="repeatBtn" aria-label="إعادة السؤال">🔊</button>
+    </div>
+    <div class="question-area" id="questionArea"></div>
+    <div class="options-area" id="optionsArea"></div>
+  </div>
+  <div id="win" class="screen">
+    <div class="win-trophy">🏆</div>
+    <div class="win-text">أحسنتِ يا صديقتي!</div>
+    <div class="win-sub">أنتِ رائعة جداً ⭐⭐⭐</div>
+    <button class="big-btn" id="playAgainBtn">العبي مرة أخرى 🎮</button>
+    <button class="big-btn" id="homeBtn" style="background:linear-gradient(135deg,#9b5de5,#6a4c93);box-shadow:0 8px 0 #4a2d6b,0 12px 25px rgba(0,0,0,.2);">الرئيسية 🏠</button>
+  </div>
+</div>
+<script>
+const DATA={animals:{{ animals|tojson }},colors:{{ colors|tojson }},numbers:{{ numbers|tojson }},body_parts:{{ body_parts|tojson }},voices:{{ voices|tojson }},letters:{{ letters|tojson }},shapes:{{ shapes|tojson }}};
+const ANIMAL_EMOJI={lion:'🦁',tiger:'🐯',wolf:'🐺',fox:'🦊',elephant:'🐘',giraffe:'🦒',zebra:'🦓',panda:'🐼',koala:'🐨',eagle:'🦅',owl:'🦉',dolphin:'🐬',bear:'🐻',cat:'🐱',dog:'🐶'};
+let audioCtx=null;
+function ensureAudio(){if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();}
+function playTone(freq,dur,type='sine',vol=0.15,delay=0){if(!audioCtx)return;const t0=audioCtx.currentTime+delay;const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type=type;osc.frequency.value=freq;gain.gain.setValueAtTime(0,t0);gain.gain.linearRampToValueAtTime(vol,t0+0.02);gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);osc.connect(gain).connect(audioCtx.destination);osc.start(t0);osc.stop(t0+dur+0.05);}
+function playClick(){ensureAudio();playTone(700,0.08,'sine',0.1);}
+function playSuccess(){ensureAudio();playTone(523,0.15,'sine',0.15,0);playTone(659,0.15,'sine',0.15,0.12);playTone(784,0.25,'sine',0.15,0.24);playTone(1047,0.35,'sine',0.12,0.36);}
+function playError(){ensureAudio();playTone(180,0.18,'triangle',0.12,0);playTone(140,0.25,'triangle',0.12,0.15);}
+let arabicVoice=null;
+function loadVoices(){if(!('speechSynthesis' in window))return;const v=speechSynthesis.getVoices();arabicVoice=v.find(x=>x.lang&&x.lang.toLowerCase().startsWith('ar'))||null;}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
+function speak(text){if(!('speechSynthesis' in window)||!text)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ar-SA';u.rate=0.85;u.pitch=1.15;if(arabicVoice)u.voice=arabicVoice;speechSynthesis.speak(u);}catch(e){}}
+/* 🎙️ يشغل تسجيل الأب لو موجود، وإلا TTS */
+let currentAudio=null;
+function playAudioKey(key,ttsFallback){
+  if(!key){if(ttsFallback)speak(ttsFallback);return;}
+  const path=DATA.voices&&DATA.voices[key];
+  if(!path){if(ttsFallback)speak(ttsFallback);return;}
+  try{
+    if(currentAudio){try{currentAudio.pause();}catch(e){}}
+    if('speechSynthesis' in window)speechSynthesis.cancel();
+    currentAudio=new Audio(path);
+    currentAudio.play().catch(err=>{
+      console.warn('audio failed',err);
+      if(ttsFallback)speak(ttsFallback);
+    });
+  }catch(e){
+    if(ttsFallback)speak(ttsFallback);
+  }
+}
+document.addEventListener('click',function(){ensureAudio();try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}},{once:true,capture:true});
+const rand=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pickN(arr,n){return shuffle(arr).slice(0,n);}
+function escHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function pickImg(x){if(x.all_imgs&&x.all_imgs.length)return x.all_imgs[Math.floor(Math.random()*x.all_imgs.length)];if(x.img)return x.img;return `/static/animals/${x.id}_1.webp`;}
+const app={gameKey:null,qIndex:0,totalQuestions:5,currentQuestion:null,locked:false};
+const CATEGORY_LABELS={colors:'ألوان',animals:'حيوانات',body:'جسمي',numbers:'أرقام',shapes:'أشكال',odd:'مختلف'};
+const SHAPES_SVG={
+  circle:'<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="#e63946"/></svg>',
+  square:'<svg viewBox="0 0 100 100"><rect x="8" y="8" width="84" height="84" rx="10" fill="#1d70b8"/></svg>',
+  triangle:'<svg viewBox="0 0 100 100"><polygon points="50,8 92,88 8,88" fill="#2a9d8f"/></svg>',
+  star:'<svg viewBox="0 0 100 100"><polygon points="50,8 61,38 92,38 66,58 76,88 50,70 24,88 34,58 8,38 39,38" fill="#ffd60a" stroke="#e0a800" stroke-width="2"/></svg>',
+  heart:'<svg viewBox="0 0 100 100"><path d="M50,88 C20,65 8,45 8,32 C8,18 20,10 32,10 C40,10 47,15 50,22 C53,15 60,10 68,10 C80,10 92,18 92,32 C92,45 80,65 50,88Z" fill="#ff70a6"/></svg>',
+  rectangle:'<svg viewBox="0 0 100 100"><rect x="5" y="20" width="90" height="60" rx="8" fill="#f77f00"/></svg>',
+  diamond:'<svg viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill="#9b5de5"/></svg>',
+  hexagon:'<svg viewBox="0 0 100 100"><polygon points="50,8 86,29 86,71 50,92 14,71 14,29" fill="#92400e"/></svg>'
+};
+const games={
+  colors:{generate(){const c=rand(DATA.colors);const ds=pickN(DATA.colors.filter(x=>x.id!==c.id),3);const all=shuffle([c,...ds]);return{promptHTML:`<div class="q-text">أين اللون</div><div class="q-name" style="color:${c.hex}">${escHtml(c.ar)}</div>`,speak:`أين اللون ${c.ar}؟`,audioKey:`col_${c.id}_where`,successAudioKey:`col_${c.id}_where`,audioKey:`col_${c.id}_where`,successAudioKey:`col_${c.id}_where`,options:all.map(x=>({isCorrect:x.id===c.id,html:`<div class="swatch" style="background:${x.hex}"></div>`,speakVal:x.ar})),successSpeak:`أحسنتِ! هذا هو اللون ${c.ar}`};}},
+  animals:{generate(){const c=rand(DATA.animals);const ds=pickN(DATA.animals.filter(x=>x.id!==c.id),3);const all=shuffle([c,...ds]);return{promptHTML:`<div class="q-text">أين</div><div class="q-name">${escHtml(c.ar)}؟</div>`,speak:`أين ${c.ar}؟`,audioKey:`ani_${c.id}_where`,options:all.map(x=>({isCorrect:x.id===c.id,html:`<img src="${pickImg(x)}" class="animal-img" data-aid="${x.id}" alt="${escHtml(x.ar)}">`,speakVal:x.ar})),successSpeak:`أحسنتِ! هذا ${c.ar}`};}},
+  numbers:{generate(){const c=rand(DATA.numbers);const ds=pickN(DATA.numbers.filter(x=>x.num!==c.num),3);const all=shuffle([c,...ds]);const items=Array(c.num).fill(`<span class="item">${c.emoji}</span>`).join('');return{promptHTML:`<div class="q-text">كم عدد الأشياء؟</div><div class="count-grid">${items}</div>`,speak:`كم عدد الأشياء؟`,audioKey:`num_${c.num}_howmany`,audioKey:`num_${c.num}_howmany`,options:all.map(x=>({isCorrect:x.num===c.num,html:`<div class="num">${x.num}</div>`,speakVal:String(x.num)})),successSpeak:`أحسنتِ! العدد هو ${c.ar}`};}},
+  body:{generate(){const c=rand(DATA.body_parts);const ds=pickN(DATA.body_parts.filter(x=>x.id!==c.id),3);const all=shuffle([c,...ds]);return{promptHTML:`<div class="q-text">أين</div><div class="q-name">${escHtml(c.ar)}؟</div>`,speak:`أين ${c.ar}؟`,audioKey:`body_${c.id}_where`,options:all.map(x=>({isCorrect:x.id===c.id,html:`<div class="emoji">${x.emoji}</div>`,speakVal:x.ar})),successSpeak:`أحسنتِ! هذا ${c.ar}`};}},
+  shapes:{generate(){
+    const c=rand(DATA.shapes);
+    const ds=pickN(DATA.shapes.filter(x=>x.id!==c.id),3);
+    const all=shuffle([c,...ds]);
+    return{promptHTML:`<div class="q-text">أين الشكل</div><div class="q-name" style="color:${c.color}">${escHtml(c.ar)}</div>`,
+      speak:`أين ${c.ar}؟`,audioKey:`shp_${c.id}_where`,
+      options:all.map(x=>({isCorrect:x.id===c.id,html:SHAPES_SVG[x.id]||'',speakVal:x.ar})),
+      successSpeak:`أحسنتِ! هذا ${c.ar}`};
+  }},
+  mix:{generate(){
+    const games_list=['colors','animals','body','numbers'];
+    const pick=games_list[Math.floor(Math.random()*games_list.length)];
+    const q=games[pick].generate();
+    q.sourceGame=pick;
+    return q;
+  }}
+};
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function startGame(key){if(key==="odd"){startOddGame();return;}if(key==="disappear"){startDisappearGame();return;}if(key==="memory"){startMemoryGame();return;}ensureAudio();playClick();app.gameKey=key;app.qIndex=0;app.locked=false;showScreen('game');renderQuestion();}
+function updateProgress(){document.getElementById('progress').innerHTML=Array.from({length:app.totalQuestions},(_,i)=>`<span class="star ${i<app.qIndex?'filled':''}">⭐</span>`).join('');}
+function renderQuestion(){
+  if(app.qIndex>=app.totalQuestions){showWin();return;}
+  app.locked=false;
+  const q=games[app.gameKey].generate();app.currentQuestion=q;
+  let promptHTML=q.promptHTML;
+  if(app.gameKey==='mix'&&q.sourceGame){promptHTML='<div class="q-badge">🎲 '+CATEGORY_LABELS[q.sourceGame]+'</div>'+promptHTML;}
+  document.getElementById('questionArea').innerHTML=promptHTML;
+  const optsEl=document.getElementById('optionsArea');
+  optsEl.innerHTML=q.options.map((o,i)=>`<button class="opt-btn" data-idx="${i}" data-correct="${o.isCorrect}">${o.html}</button>`).join('');
+  optsEl.querySelectorAll('.opt-btn').forEach(btn=>btn.addEventListener('click',()=>handleChoice(btn)));
+  optsEl.querySelectorAll('.animal-img').forEach(img=>{img.addEventListener('error',()=>{const aid=img.dataset.aid||'';const em=ANIMAL_EMOJI[aid]||'🐾';const div=document.createElement('div');div.className='emoji';div.textContent=em;img.replaceWith(div);});});
+  updateProgress();
+  setTimeout(()=>{if(q.audioKey)playAudioKey(q.audioKey,q.speak);else speak(q.speak);},400);
+}
+function handleChoice(btn){
+  if(app.locked)return;
+  if(btn.dataset.correct==='true'){
+    app.locked=true;btn.classList.add('correct');
+    playSuccess();confetti();
+    setTimeout(()=>{if(app.currentQuestion.successAudioKey)playAudioKey(app.currentQuestion.successAudioKey,null);else if(app.currentQuestion.successSpeak)speak(app.currentQuestion.successSpeak);},250);
+    app.qIndex++;updateProgress();postProgress();
+    setTimeout(renderQuestion,2200);
+  }else{
+    playError();btn.classList.add('wrong');
+    setTimeout(()=>btn.classList.remove('wrong'),600);
+    speak('حاولي مرة أخرى');
+  }
+}
+async function postProgress(){try{await fetch('/api/update_progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game_id:app.gameKey,stars:1})});}catch(e){}}
+function confetti(){const p=['#e63946','#1d70b8','#ffd60a','#2a9d8f','#f77f00','#9b5de5','#ff70a6'];for(let i=0;i<35;i++){const el=document.createElement('div');el.className='confetti';el.style.left=(Math.random()*100)+'vw';el.style.background=p[Math.floor(Math.random()*p.length)];el.style.animationDelay=(Math.random()*0.4)+'s';el.style.animationDuration=(1.4+Math.random()*0.8)+'s';el.style.width=(10+Math.random()*8)+'px';el.style.height=(10+Math.random()*8)+'px';if(Math.random()>0.5)el.style.borderRadius='50%';document.body.appendChild(el);setTimeout(()=>el.remove(),2500);}}
+function showWin(){showScreen('win');playSuccess();confetti();setTimeout(()=>speak('أحسنتِ يا صديقتي! أنتِ رائعة جداً!'),400);setTimeout(confetti,800);setTimeout(confetti,1600);}
+document.querySelectorAll('.game-card').forEach(card=>card.addEventListener('click',()=>startGame(card.dataset.game)));
+document.getElementById('backBtn').addEventListener('click',()=>{playClick();try{speechSynthesis.cancel();}catch(e){}showScreen('home');});
+document.getElementById('repeatBtn').addEventListener('click',()=>{if(app.currentQuestion){if(app.currentQuestion.audioKey)playAudioKey(app.currentQuestion.audioKey,app.currentQuestion.speak);else speak(app.currentQuestion.speak);}});
+document.getElementById('playAgainBtn').addEventListener('click',()=>{playClick();startGame(app.gameKey);});
+document.getElementById('homeBtn').addEventListener('click',()=>{playClick();showScreen('home');});
+let titleTaps=0;
+document.getElementById('homeTitle').addEventListener('click',()=>{titleTaps++;setTimeout(()=>{titleTaps=0;},800);if(titleTaps>=5){titleTaps=0;window.location.href='/admin';}});
+ensureAudio();
+
+/* ============ MEMORY GAME ============ */
+let memoryState = { cards: [], flipped: [], matched: 0, total: 3, locked: false };
+
+function startMemoryGame() {
+  ensureAudio(); playClick();
+  app.gameKey = 'memory';
+  app.currentQuestion = null;  // يمنع زر 🔊 من تشغيل سؤال قديم
+  showScreen('game');
+  memoryState = { cards: [], flipped: [], matched: 0, total: 3, locked: false };
+  const selected = shuffle(DATA.animals).slice(0, 3);
+  const cards = [];
+  selected.forEach(a => {
+    cards.push({ pairId: a.id, img: pickImg(a), ar: a.ar });
+    cards.push({ pairId: a.id, img: pickImg(a), ar: a.ar });
+  });
+  memoryState.cards = shuffle(cards);
+  renderMemoryGrid();
+  renderMemoryProgress();
+  setTimeout(() => speak('اقلب البطاقات وزوجي الحيوانات'), 400);
+}
+
+function renderMemoryProgress() {
+  document.getElementById('progress').innerHTML = Array.from(
+    {length: memoryState.total},
+    (_, i) => `<span class="star ${i < memoryState.matched ? 'filled' : ''}">⭐</span>`
+  ).join('');
+}
+
+function renderMemoryGrid() {
+  document.getElementById('questionArea').innerHTML =
+    '<div class="q-text">اقلب البطاقات وزوجي الحيوانات 🧠</div>' +
+    '<div class="q-name" style="font-size:clamp(24px,5vw,36px)">لعبة الذاكرة</div>';
+  const optsArea = document.getElementById('optionsArea');
+  optsArea.innerHTML = '<div class="memory-grid">' +
+    memoryState.cards.map((c, i) => `
+      <div class="memory-card" data-idx="${i}">
+        <div class="memory-card-inner">
+          <div class="memory-card-front">❓</div>
+          <div class="memory-card-back">
+            <img src="${c.img}" alt="${escHtml(c.ar)}" data-aid="${c.pairId}">
+          </div>
+        </div>
+      </div>
+    `).join('') + '</div>';
+
+  optsArea.querySelectorAll('.memory-card').forEach(card => {
+    card.addEventListener('click', () => flipCard(card));
+  });
+
+  optsArea.querySelectorAll('.memory-card-back img').forEach(img => {
+    img.addEventListener('error', () => {
+      const aid = img.dataset.aid || '';
+      const em = ANIMAL_EMOJI[aid] || '🐾';
+      const div = document.createElement('div');
+      div.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:clamp(40px,10vw,64px)';
+      div.textContent = em;
+      img.replaceWith(div);
+    });
+  });
+}
+
+function flipCard(card) {
+  if (memoryState.locked) return;
+  const idx = parseInt(card.dataset.idx);
+  if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+  card.classList.add('flipped');
+  memoryState.flipped.push(idx);
+  playClick();
+
+  if (memoryState.flipped.length === 2) {
+    memoryState.locked = true;
+    const [i1, i2] = memoryState.flipped;
+    const c1 = memoryState.cards[i1];
+    const c2 = memoryState.cards[i2];
+
+    if (c1.pairId === c2.pairId) {
+      setTimeout(() => {
+        document.querySelectorAll(`.memory-card[data-idx="${i1}"], .memory-card[data-idx="${i2}"]`).forEach(el => el.classList.add('matched'));
+        playSuccess();
+        confetti();
+        memoryState.matched++;
+        memoryState.flipped = [];
+        memoryState.locked = false;
+        renderMemoryProgress();
+        if (memoryState.matched === memoryState.total) {
+          setTimeout(() => showWin(), 1000);
+        }
+      }, 600);
+    } else {
+      setTimeout(() => {
+        document.querySelectorAll(`.memory-card[data-idx="${i1}"], .memory-card[data-idx="${i2}"]`).forEach(el => el.classList.remove('flipped'));
+        playError();
+        memoryState.flipped = [];
+        memoryState.locked = false;
+      }, 1200);
+    }
+  }
+}
+
+// زر 🔊 في وضع الذاكرة يعيد نطق التعليمات
+document.getElementById('repeatBtn').addEventListener('click', () => {
+  if (app.gameKey === 'memory') {
+    speak('اقلب البطاقات وزوجي الحيوانات');
+  }
+});
+
+
+/* ============ DISAPPEAR GAME (فين راح؟) ============ */
+const disappearState = { locked: false, round: 0, total: 5 };
+
+function startDisappearGame() {
+  ensureAudio(); playClick();
+  app.gameKey = 'disappear';
+  app.currentQuestion = null;
+  app.qIndex = 0;
+  app.totalQuestions = 5;
+  disappearState.locked = false;
+  disappearState.round = 0;
+  showScreen('game');
+  playDisappearRound();
+}
+
+function playDisappearRound() {
+  if (app.qIndex >= app.totalQuestions) { showWin(); return; }
+  disappearState.locked = false;
+  updateProgress();
+
+  // اختيار 3 حيوانات عشوائياً
+  const trio = pickN(DATA.animals, 3);
+  const missingIdx = Math.floor(Math.random() * 3);
+  const missing = trio[missingIdx];
+  const remaining = trio.filter((_, i) => i !== missingIdx);
+  app.currentQuestion = { 
+    speak: 'مين مش موجود؟', 
+    audioKey: 'dis_question', 
+    successSpeak: 'أحسنتِ! ' + missing.ar + ' كان مش موجود' 
+  };
+
+  // ===== PHASE 1: عرض 3 حيوانات =====
+  document.getElementById('questionArea').innerHTML = 
+    '<div class="q-text" style="font-size:clamp(20px,4.5vw,28px)">👀 بصّي كويس...</div>';
+  const optsArea = document.getElementById('optionsArea');
+  optsArea.innerHTML = '<div class="dgrid">' + 
+    trio.map(a => `<div class="ditem"><img src="${pickImg(a)}" alt="${escHtml(a.ar)}" data-aid="${a.id}"></div>`).join('') + 
+    '</div>';
+  attachImgFallback(optsArea);
+  playAudioKey('dis_look', 'بصي كويس');
+
+  // ===== PHASE 2: بعد 2.5 ثانية → واحد اختفى + السؤال =====
+  setTimeout(() => {
+    document.getElementById('questionArea').innerHTML = 
+      '<div class="q-text" style="font-size:clamp(22px,5vw,32px);font-weight:900;color:#e63946">❓ مين مش موجود؟</div>' +
+      '<div class="dremaining">' + 
+        remaining.map(a => `<img src="${pickImg(a)}" class="drem-img" alt="${escHtml(a.ar)}" data-aid="${a.id}">`).join('') + 
+      '</div>';
+    playAudioKey('dis_question', 'مين مش موجود؟');
+
+    // الخيارات: 3 صور
+    const opts = shuffle([...trio]);
+    setTimeout(() => {
+      optsArea.innerHTML = '<div class="options-area">' + 
+        opts.map(a => `<button class="opt-btn" data-correct="${a.id === missing.id}" data-aid="${a.id}">` +
+          `<img src="${pickImg(a)}" class="animal-img" data-aid="${a.id}" alt="${escHtml(a.ar)}">` +
+          `</button>`).join('') + 
+        '</div>';
+      optsArea.querySelectorAll('.opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => handleDisappearChoice(btn, missing));
+      });
+      attachImgFallback(optsArea);
+    }, 1200);
+  }, 2500);
+}
+
+function handleDisappearChoice(btn, missingAnimal) {
+  if (disappearState.locked) return;
+  if (btn.dataset.correct === 'true') {
+    disappearState.locked = true;
+    btn.classList.add('correct');
+    playSuccess();
+    confetti();
+    setTimeout(() => speak('أحسنتِ! ' + missingAnimal.ar + ' كان مش موجود'), 250);
+    app.qIndex++;
+    updateProgress();
+    postProgress();
+    setTimeout(playDisappearRound, 2400);
+  } else {
+    playError();
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 600);
+    speak('حاولي مرة أخرى');
+  }
+}
+
+function attachImgFallback(root) {
+  root.querySelectorAll('img[data-aid]').forEach(img => {
+    img.addEventListener('error', () => {
+      const em = ANIMAL_EMOJI[img.dataset.aid] || '🐾';
+      const div = document.createElement('div');
+      div.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:clamp(40px,10vw,64px)';
+      div.textContent = em;
+      img.replaceWith(div);
+    });
+  });
+}
+
+
+/* ============ ODD ONE OUT (مين المختلف؟) ============ */
+const oddState = { locked: false };
+
+function startOddGame() {
+  ensureAudio(); playClick();
+  app.gameKey = 'odd';
+  app.currentQuestion = null;
+  app.qIndex = 0;
+  app.totalQuestions = 5;
+  oddState.locked = false;
+  showScreen('game');
+  playOddRound();
+}
+
+function playOddRound() {
+  if (app.qIndex >= app.totalQuestions) { showWin(); return; }
+  oddState.locked = false;
+  updateProgress();
+
+  const mixType = Math.floor(Math.random() * 4);
+  const items = [];
+  let oddType = '';
+
+  if (mixType === 0) {
+    // 3 حيوانات + 1 دائرة ملونة
+    const trio = pickN(DATA.animals, 3);
+    const color = rand(DATA.colors);
+    trio.forEach(a => items.push({
+      type: 'animal', id: a.id,
+      html: `<img src="${pickImg(a)}" class="animal-img" data-aid="${a.id}" alt="${escHtml(a.ar)}">`
+    }));
+    items.push({
+      type: 'color', id: color.id,
+      html: `<div class="swatch" style="background:${color.hex}"></div>`
+    });
+    oddType = 'color';
+  } else if (mixType === 1) {
+    // 3 دوائر ملونة + 1 حيوان
+    const trio = pickN(DATA.colors, 3);
+    const animal = rand(DATA.animals);
+    trio.forEach(c => items.push({
+      type: 'color', id: c.id,
+      html: `<div class="swatch" style="background:${c.hex}"></div>`
+    }));
+    items.push({
+      type: 'animal', id: animal.id,
+      html: `<img src="${pickImg(animal)}" class="animal-img" data-aid="${animal.id}" alt="${escHtml(animal.ar)}">`
+    });
+    oddType = 'animal';
+  } else if (mixType === 2) {
+    // 3 أشكال + 1 حيوان
+    const trio = pickN(DATA.shapes, 3);
+    const animal = rand(DATA.animals);
+    trio.forEach(s => items.push({
+      type: 'shape', id: s.id,
+      html: SHAPES_SVG[s.id] || ''
+    }));
+    items.push({
+      type: 'animal', id: animal.id,
+      html: `<img src="${pickImg(animal)}" class="animal-img" data-aid="${animal.id}" alt="${escHtml(animal.ar)}">`
+    });
+    oddType = 'animal';
+  } else {
+    // 3 حيوانات + 1 شكل
+    const trio = pickN(DATA.animals, 3);
+    const shape = rand(DATA.shapes);
+    trio.forEach(a => items.push({
+      type: 'animal', id: a.id,
+      html: `<img src="${pickImg(a)}" class="animal-img" data-aid="${a.id}" alt="${escHtml(a.ar)}">`
+    }));
+    items.push({
+      type: 'shape', id: shape.id,
+      html: SHAPES_SVG[shape.id] || ''
+    });
+    oddType = 'shape';
+  }
+
+  // العنصر المختلف هو آخر واحد
+  const oddItem = items[items.length - 1];
+  const shuffled = shuffle([...items]);
+  const oddNewIdx = shuffled.indexOf(oddItem);
+
+  app.currentQuestion = {
+    speak: 'مين المختلف؟',
+    audioKey: 'odd_question',
+    successSpeak: 'أحسنتِ! ده المختلف'
+  };
+
+  document.getElementById('questionArea').innerHTML =
+    '<div class="q-text" style="font-size:clamp(22px,5vw,32px);font-weight:900">🤔 مين المختلف؟</div>';
+
+  const optsArea = document.getElementById('optionsArea');
+  optsArea.innerHTML = '<div class="odd-grid">' +
+    shuffled.map((item, i) =>
+      `<button class="opt-btn" data-correct="${i === oddNewIdx}">${item.html}</button>`
+    ).join('') + '</div>';
+
+  optsArea.querySelectorAll('.opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleOddChoice(btn));
+  });
+
+  optsArea.querySelectorAll('img[data-aid]').forEach(img => {
+    img.addEventListener('error', () => {
+      const em = ANIMAL_EMOJI[img.dataset.aid] || '🐾';
+      const div = document.createElement('div');
+      div.className = 'emoji';
+      div.textContent = em;
+      img.replaceWith(div);
+    });
+  });
+
+  setTimeout(() => playAudioKey('odd_question', 'مين المختلف؟'), 400);
+}
+
+function handleOddChoice(btn) {
+  if (oddState.locked) return;
+  if (btn.dataset.correct === 'true') {
+    oddState.locked = true;
+    btn.classList.add('correct');
+    playSuccess();
+    confetti();
+    setTimeout(() => speak('أحسنتِ! ده المختلف'), 250);
+    app.qIndex++;
+    updateProgress();
+    postProgress();
+    setTimeout(playOddRound, 2200);
+  } else {
+    playError();
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 600);
+    speak('حاولي مرة أخرى');
+  }
+}
+
+</script>
+</body>
+</html>
