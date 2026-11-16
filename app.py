@@ -8,7 +8,10 @@ import requests
 from PIL import Image
 
 app = Flask(__name__)
-DB_PATH = "game1.db"
+DB_PATH = os.environ.get("DB_PATH", "game1.db")
+_db_dir = os.path.dirname(DB_PATH)
+if _db_dir:
+    os.makedirs(_db_dir, exist_ok=True)
 ANIMALS_DIR = os.path.join("static", "animals")
 VOICES_DIR = os.path.join("static", "voices")
 os.makedirs(ANIMALS_DIR, exist_ok=True)
@@ -171,6 +174,34 @@ def get_all_questions():
                    "subgroup_ar": letter, "text_ar": f"أين حرف {letter}؟"})
     return qs
 
+
+
+def sync_voice_metadata():
+    """يزامن جدول voices مع الملفات الموجودة في static/voices/ (للاستضافة)."""
+    if not os.path.exists(VOICES_DIR):
+        return
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        existing = {r["item_key"] for r in conn.execute("SELECT item_key FROM voices").fetchall()}
+        added = 0
+        for fname in os.listdir(VOICES_DIR):
+            if not fname.endswith((".webm", ".mp4", ".ogg", ".wav")):
+                continue
+            item_key = fname.rsplit(".", 1)[0]
+            if item_key not in existing:
+                web_path = f"/static/voices/{fname}"
+                try:
+                    conn.execute(
+                        "INSERT INTO voices (item_key, file_path, voice_type, speaker) VALUES (?, ?, 'question', 'dad')",
+                        (item_key, web_path))
+                    added += 1
+                except Exception:
+                    pass
+        conn.commit()
+        if added:
+            print(f"   [sync] +{added} تسجيل من الملفات")
+
+
 def init_db():
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
@@ -191,6 +222,10 @@ def init_db():
             c.execute("INSERT OR IGNORE INTO progress (game_id, completed, total, stars) VALUES (?, ?, ?, ?)", g)
         c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('setup_done', '0')")
         conn.commit()
+    try:
+        sync_voice_metadata()
+    except Exception as e:
+        print(f"   [sync] error: {e}")
 
 def get_animals_list():
     groups = {}
