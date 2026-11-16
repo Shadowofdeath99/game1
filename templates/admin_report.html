@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📈 تقرير التقدم</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--primary:#10b981;--warn:#fbbf24;--danger:#ef4444;--text:#f8fafc;--muted:#94a3b8;--accent:#3b82f6;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px;}
+.container{max-width:900px;margin:auto;}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.topbar a{color:var(--text);text-decoration:none;background:var(--card);padding:10px 16px;border-radius:12px;font-weight:700;}
+h1{font-size:1.5rem;color:var(--primary);flex:1;}
+.sub{color:var(--muted);font-size:0.85rem;}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.stat{background:var(--card);padding:20px;border-radius:16px;text-align:center;}
+.stat .v{font-size:2rem;font-weight:900;color:var(--warn);}
+.stat .l{color:var(--muted);margin-top:4px;font-size:0.9rem;}
+h2{color:var(--muted);font-size:1.15rem;margin:20px 0 12px;}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.gcard{background:var(--card);padding:16px;border-radius:16px;}
+.gname{font-size:1.05rem;font-weight:900;color:var(--accent);margin-bottom:8px;}
+.gstats{display:flex;justify-content:space-between;color:var(--muted);font-size:0.9rem;margin-bottom:10px;}
+.bar{height:12px;background:#334155;border-radius:6px;overflow:hidden;}
+.bar>div{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));}
+.top{background:linear-gradient(135deg,#7c3aed,#4c1d95);padding:20px;border-radius:16px;margin-top:20px;text-align:center;}
+.top .lbl{color:#e9d5ff;font-size:0.9rem;}
+.top .name{font-size:1.5rem;font-weight:900;color:#fff;margin-top:4px;}
+.note{background:#1e3a5f;padding:16px;border-radius:12px;color:#93c5fd;line-height:1.7;margin-top:20px;font-size:0.9rem;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <a href="/admin">← الإدارة</a>
+    <h1>📈 تقرير التقدم</h1>
+    <span class="sub">{{ now }}</span>
+  </div>
+
+  <div class="summary">
+    <div class="stat"><div class="v">{{ total_stars }}</div><div class="l">⭐ نجوم</div></div>
+    <div class="stat"><div class="v">{{ total_completed }}</div><div class="l">✅ إجابات صحيحة</div></div>
+    <div class="stat"><div class="v">{{ voices_count }}/{{ total_q }}</div><div class="l">🎤 تسجيلات</div></div>
+    <div class="stat"><div class="v">{{ (voices_count / total_q * 100)|round|int if total_q else 0 }}%</div><div class="l">📊 اكتمال</div></div>
+  </div>
+
+  {% if top_game %}
+  <div class="top">
+    <div class="lbl">🏆 اللعبة المفضلة</div>
+    <div class="name">{{ top_game.game_id }} — {{ top_game.stars }} ⭐</div>
+  </div>
+  {% endif %}
+
+  <h2>🎮 التقدم في كل لعبة</h2>
+  <div class="games">
+    {% for p in progress %}
+    {% set pct = ((p.completed / p.total * 100) if p.total else 0)|round|int %}
+    <div class="gcard">
+      <div class="gname">{{ p.game_id }}</div>
+      <div class="gstats">
+        <span>✅ {{ p.completed }} / {{ p.total }}</span>
+        <span>⭐ {{ p.stars }}</span>
+      </div>
+      <div class="bar"><div style="width:{{ pct }}%"></div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="note">
+    💡 <b>ملاحظات:</b><br>
+    • كل نجمة = إجابة صحيحة<br>
+    • اكتمال التسجيل = نسبة الأسئلة اللي عندها صوتك<br>
+    • اللعبة المفضلة = أعلى عدد نجوم
+  </div>
+</div>
+</body>
+</html>

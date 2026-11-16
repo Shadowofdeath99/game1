@@ -369,6 +369,28 @@ def _save_square_webp(data, out_path):
     img.save(out_path, "WEBP", quality=85)
 
 
+@app.route("/admin/report")
+def admin_report():
+    import datetime
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        progress = [dict(r) for r in conn.execute("SELECT * FROM progress ORDER BY stars DESC").fetchall()]
+        voices_count = conn.execute("SELECT COUNT(*) FROM voices").fetchone()[0]
+    total_q = len(get_all_questions())
+    total_stars = sum(p["stars"] for p in progress)
+    total_completed = sum(p["completed"] for p in progress)
+    top_game = progress[0] if progress and progress[0]["stars"] > 0 else None
+    return render_template("admin_report.html",
+        progress=progress, voices_count=voices_count, total_q=total_q,
+        total_stars=total_stars, total_completed=total_completed,
+        top_game=top_game, now=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+
+@app.route("/manifest.json")
+def manifest():
+    return app.send_static_file("manifest.json")
+
+
 @app.route("/api/fetch", methods=["POST"])
 def api_fetch():
     data = request.get_json(silent=True) or {}

@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#ffb703">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="لعبة صديقتي">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<meta name="theme-color" content="#ffb703">
 <title>🎈 لعبة صديقتي</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -637,6 +643,15 @@ function handleOddChoice(btn) {
     setTimeout(() => btn.classList.remove('wrong'), 600);
     speak('حاولي مرة أخرى');
   }
+}
+
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/static/sw.js')
+      .then(() => console.log('✅ SW registered'))
+      .catch(e => console.log('SW fail:', e));
+  });
 }
 
 </script>
