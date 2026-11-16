@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>game1 — لوحة الإدارة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--primary:#10b981;--secondary:#3b82f6;--accent:#fbbf24;--text:#f8fafc;}
+*{box-sizing:border-box;font-family:'Cairo',sans-serif;}
+body{background:var(--bg);color:var(--text);margin:0;padding:16px;}
+.container{max-width:1000px;margin:auto;}
+header{text-align:center;padding:20px;background:var(--card);border-radius:16px;margin-bottom:20px;}
+h1{margin:0 0 8px;font-size:1.6rem;color:var(--primary);}
+.play-link{display:inline-block;margin-top:12px;padding:12px 28px;background:linear-gradient(135deg,#ffb703,#fb8500);color:#fff;text-decoration:none;border-radius:999px;font-weight:900;font-size:1.1rem;box-shadow:0 6px 0 #b45f00;}
+.play-link:active{transform:translateY(3px);box-shadow:0 3px 0 #b45f00;}
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;background:var(--card);padding:15px;border-radius:16px;}
+input{flex:1;min-width:200px;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:white;font-size:1rem;}
+button{padding:12px 20px;border:none;border-radius:10px;font-weight:700;cursor:pointer;color:white;}
+.btn-search{background:var(--primary);}
+.btn-bulk{background:var(--secondary);}
+button:disabled{opacity:0.6;}
+.status-bar{text-align:center;margin-bottom:15px;font-weight:600;color:var(--accent);}
+.progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+.prog-card{background:var(--card);padding:12px;border-radius:12px;text-align:center;}
+.prog-card .name{font-size:0.85rem;color:#94a3b8;}
+.prog-card .stars{font-size:1.2rem;color:var(--accent);margin-top:6px;}
+.animals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
+.animal-card{width:100%;aspect-ratio:1/1;background:var(--card);border-radius:14px;overflow:hidden;border:2px solid #334155;}
+.animal-card img{width:100%;height:100%;object-fit:cover;display:block;}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🎮 game1 — لوحة الإدارة</h1>
+    <p>جلب الصور وتوحيدها + حالة التقدم</p>
+    <a href="/game" class="play-link">🎯 العب اللعبة</a>
+    <a href="/recordings" class="play-link" style="background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 6px 0 #7f1d1d;margin-right:8px;">🎤 التسجيلات</a>
+  </header>
+
+  <div class="progress-grid">
+    {% for gid, p in progress.items() %}
+    <div class="prog-card">
+      <div class="name">{{ gid }}</div>
+      <div class="stars">⭐ {{ p.stars }}</div>
+      <div class="name">{{ p.completed }}/{{ p.total }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="controls">
+    <input type="text" id="animalInput" placeholder="اسم الحيوان بالإنجليزية (lion, cat, ...)">
+    <button class="btn-search" id="fetchBtn" onclick="fetchAnimals(false)">🔍 جلب صورة</button>
+    <button class="btn-bulk" id="bulkBtn" onclick="fetchAnimals(true)">⚡ جلب الكل</button>
+  </div>
+
+  <div class="status-bar" id="statusBar">عدد الصور الجاهزة: {{ images|length }} صورة</div>
+
+  <div class="animals-grid">
+    {% for img in images %}
+    <div class="animal-card"><img src="{{ img }}" loading="lazy" alt="animal"></div>
+    {% endfor %}
+  </div>
+</div>
+<script>
+async function fetchAnimals(isBulk){
+  const input=document.getElementById('animalInput');
+  const status=document.getElementById('statusBar');
+  const btns=document.querySelectorAll('button');
+  const query=isBulk?"ALL_DEFAULT":input.value.trim();
+  if(!query)return alert("اكتب اسم الحيوان أولاً");
+  btns.forEach(b=>b.disabled=true);
+  status.innerText="⏳ جاري التحميل...";
+  try{
+    const res=await fetch('/api/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({animal:query,count:6})});
+    const data=await res.json();
+    if(data.status==='success'){
+      status.innerText=`✅ تم حفظ ${data.added} صورة!`;
+      setTimeout(()=>location.reload(),800);
+    }else{
+      status.innerText="❌ "+(data.message||"فشل");
+    }
+  }catch(e){status.innerText="❌ تعذر الاتصال";}
+  finally{btns.forEach(b=>b.disabled=false);}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🎤 تسجيل الأصوات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#334155;--primary:#10b981;--secondary:#3b82f6;--danger:#ef4444;--warn:#fbbf24;--text:#f8fafc;--muted:#94a3b8;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:100px;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--card);padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #0a0f1e;}
+.topbar button{background:none;border:none;color:var(--text);font-size:1.4rem;cursor:pointer;padding:6px 10px;border-radius:8px;}
+.topbar button:hover{background:var(--card2);}
+.topbar h1{flex:1;font-size:1.1rem;font-weight:900;color:var(--primary);}
+.topbar .stats{background:var(--primary);color:#fff;padding:4px 12px;border-radius:999px;font-size:0.85rem;font-weight:900;}
+.warn-banner{background:#7c2d12;color:#fed7aa;padding:10px 16px;font-size:0.8rem;text-align:center;}
+.container{padding:16px;max-width:900px;margin:0 auto;}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+.cat-card{background:var(--card);border-radius:16px;padding:16px;cursor:pointer;transition:transform .15s;border:2px solid var(--card2);}
+.cat-card:active{transform:scale(.97);}
+.cat-card .cat-icon{font-size:2rem;margin-bottom:8px;}
+.cat-card .cat-title{font-size:1rem;font-weight:900;margin-bottom:8px;}
+.cat-card .cat-progress{height:8px;background:var(--card2);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+.cat-card .cat-progress > div{height:100%;background:var(--primary);transition:width .3s;}
+.cat-card .cat-count{font-size:0.8rem;color:var(--muted);}
+.item-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.item-card{background:var(--card);border-radius:12px;padding:14px;cursor:pointer;transition:transform .15s;border:2px solid var(--card2);}
+.item-card:active{transform:scale(.97);}
+.item-card.done{border-color:var(--primary);}
+.item-card .item-name{font-size:1.1rem;font-weight:900;margin-bottom:6px;}
+.item-card .item-count{font-size:0.8rem;color:var(--muted);}
+.q-row{background:var(--card);border-radius:12px;padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;border:2px solid var(--card2);}
+.q-row.done{border-color:var(--primary);}
+.q-row .q-info{flex:1;min-width:0;}
+.q-row .q-text{font-size:0.95rem;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.q-row .q-meta{font-size:0.75rem;color:var(--muted);}
+.q-row .q-btns{display:flex;gap:6px;flex-shrink:0;}
+.q-row button{padding:10px 14px;border:none;border-radius:8px;font-weight:900;font-size:1.1rem;cursor:pointer;color:#fff;}
+.btn-play{background:var(--secondary);}
+.btn-rec{background:var(--danger);}
+.btn-del{background:var(--card2);color:var(--muted);}
+.btn-play:disabled{opacity:.3;cursor:not-allowed;}
+.section{margin-bottom:20px;}
+.section h2{font-size:1rem;color:var(--muted);margin-bottom:10px;padding:0 4px;}
+.btn-fast{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:900;cursor:pointer;margin-bottom:16px;box-shadow:0 4px 0 #92400e;}
+.btn-fast:active{transform:translateY(2px);box-shadow:0 2px 0 #92400e;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.overlay.active{display:flex;}
+.rec-card{background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:500px;text-align:center;}
+.rec-card h2{font-size:1.3rem;font-weight:900;color:var(--primary);margin-bottom:16px;line-height:1.4;}
+.rec-question{font-size:clamp(1.5rem,6.5vw,2.4rem);font-weight:900;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;padding:22px 16px;border-radius:16px;margin-bottom:16px;min-height:140px;display:flex;align-items:center;justify-content:center;line-height:1.4;text-align:center;word-break:break-word;box-shadow:0 6px 20px rgba(0,0,0,.4),inset 0 -4px 0 rgba(0,0,0,.1);position:relative;}
+.rec-question .zoom-btn{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.4);border:none;color:#fff;font-size:1rem;padding:6px 10px;border-radius:8px;cursor:pointer;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:100;align-items:flex-start;justify-content:center;padding:10px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.overlay.active{display:flex;}
+.rec-card{background:var(--card);border-radius:20px;padding:16px;width:100%;max-width:560px;text-align:center;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.6);}
+@media(max-width:480px){
+  .rec-question{font-size:1.6rem;padding:24px 14px;min-height:160px;}
+  .rec-card{padding:14px;border-radius:16px;}
+  .rec-card h2{font-size:1.05rem;margin-bottom:8px;}
+  .rec-controls button{padding:16px 20px;font-size:1.05rem;min-width:0;flex:1;}
+}
+#zoomOverlay{display:none;position:fixed;inset:0;background:#fff;z-index:200;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
+#zoomOverlay.active{display:flex;}
+#zoomOverlay .zoom-text{font-size:clamp(2rem,9vw,4rem);font-weight:900;color:#000;line-height:1.4;word-break:break-word;}
+#zoomOverlay .zoom-close{position:absolute;top:16px;left:16px;background:#ef4444;color:#fff;border:none;padding:12px 20px;border-radius:12px;font-size:1rem;font-weight:900;cursor:pointer;}
+.rec-countdown{font-size:5rem;font-weight:900;color:var(--warn);margin:16px 0;animation:pulse 1s infinite;display:none;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.level-meter{height:24px;background:var(--card2);border-radius:12px;overflow:hidden;margin:12px 0;}
+.level-meter > div{height:100%;width:0;background:var(--primary);transition:width .08s,background .15s;border-radius:12px;}
+.rec-timer{font-size:1.5rem;font-weight:900;color:var(--warn);margin:8px 0 16px;}
+.rec-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.rec-controls button{padding:14px 24px;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:900;cursor:pointer;color:#fff;min-width:100px;}
+.btn-stop{background:var(--danger);}
+.btn-save{background:var(--primary);}
+.btn-retry{background:var(--warn);color:#000;}
+.btn-skip{background:var(--card2);}
+.rec-controls button:active{transform:scale(.96);}
+.playback-audio{width:100%;margin:16px 0;}
+.queue-info{font-size:0.85rem;color:var(--muted);margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<div id="httpsWarn" class="warn-banner" style="display:none;">
+  ⚠️ للتسجيل من الموبايل: لازم تفتح الصفحة عبر HTTPS. جرّب:
+  <code style="background:#000;padding:2px 6px;border-radius:4px;direction:ltr;display:inline-block;">ngrok http 5000</code>
+</div>
+
+<div class="topbar">
+  <button onclick="goBack()">←</button>
+  <h1 id="pageTitle">🎤 التسجيلات</h1>
+  <span class="stats" id="stats">0/158</span>
+</div>
+
+<div class="container" id="view"></div>
+
+<div id="recorderOverlay" class="overlay">
+  <div class="rec-card">
+    <div class="queue-info" id="queueInfo"></div>
+    <h2>🎙️ سجّل السؤال</h2>
+    <div class="rec-question" id="recQuestion"><button class="zoom-btn" onclick="openZoom()" title="تكبير">🔍</button><span id="recQuestionText"></span></div>
+    <div class="rec-countdown" id="recCountdown">3</div>
+    <div class="level-meter"><div id="levelBar"></div></div>
+    <div class="rec-timer" id="recTimer">0.0s</div>
+    <div id="recLiveControls" class="rec-controls">
+      <button class="btn-stop" onclick="stopRecording()">⏹️ إيقاف</button>
+    </div>
+    <div id="recPlaybackControls" style="display:none;">
+      <audio id="playbackAudio" class="playback-audio" controls></audio>
+      <div class="rec-controls">
+        <button class="btn-retry" onclick="reRecord()">🔁 إعادة</button>
+        <button class="btn-save" onclick="saveRecording()">💾 حفظ</button>
+        <button class="btn-skip" onclick="skipQuestion()">⏭️ تخطي</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORY_ICONS={animals:'🐶',colors:'🎨',numbers:'🔢',body:'👁️',letters:'🔤',encouragement:'🎉'};
+const CATEGORY_ORDER=['animals','colors','numbers','body','letters','encouragement'];
+let ALL=[], STATS={};
+let state={level:'categories',cat:null,item:null};
+let recQueue=[], recIdx=0, pendingKey=null;
+let mediaRecorder=null, chunks=[], stream=null, audioCtx=null, analyser=null, rafId=null, timerId=null;
+let startTime=0, curBlob=null, curExt='webm', curDuration=0;
+
+if(location.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(location.hostname)){
+  document.getElementById('httpsWarn').style.display='block';
+}
+
+async function loadData(){
+  const res=await fetch('/api/voices/list');
+  const data=await res.json();
+  ALL=data.questions; STATS=data.stats;
+  updateStats(); render();
+}
+function updateStats(){
+  const done=ALL.filter(q=>q.recorded).length;
+  document.getElementById('stats').textContent=`${done}/${ALL.length}`;
+}
+function render(){
+  if(state.level==='categories') renderCategories();
+  else if(state.level==='category') renderCategory(state.cat);
+  else if(state.level==='item') renderItem(state.cat,state.item);
+}
+function goBack(){
+  if(state.level==='item'){state.level='category';state.item=null;}
+  else if(state.level==='category'){state.level='categories';state.cat=null;}
+  else{location.href='/';return;}
+  render();
+}
+function renderCategories(){
+  document.getElementById('pageTitle').textContent='🎤 التسجيلات';
+  const v=document.getElementById('view');
+  let html='<div class="cat-grid">';
+  for(const k of CATEGORY_ORDER){
+    if(!STATS[k])continue;
+    const s=STATS[k]; const pct=Math.round(s.done/s.total*100)||0;
+    html+=`<div class="cat-card" onclick="openCategory('${k}')">
+      <div class="cat-icon">${CATEGORY_ICONS[k]||'📁'}</div>
+      <div class="cat-title">${s.category_ar}</div>
+      <div class="cat-progress"><div style="width:${pct}%"></div></div>
+      <div class="cat-count">${s.done}/${s.total}</div>
+    </div>`;
+  }
+  html+='</div>';
+  html+=`<button class="btn-fast" style="margin-top:20px;" onclick="startFastAll()">🎙️ تسجيل سريع لكل الأسئلة (${ALL.filter(q=>!q.recorded).length} متبقي)</button>`;
+  v.innerHTML=html;
+}
+function openCategory(cat){state.level='category';state.cat=cat;state.item=null;render();}
+function renderCategory(cat){
+  const catQs=ALL.filter(q=>q.category===cat);
+  const hasSubgroups=catQs.some(q=>q.subgroup);
+  document.getElementById('pageTitle').textContent=`${CATEGORY_ICONS[cat]||''} ${STATS[cat].category_ar}`;
+  const v=document.getElementById('view');
+  let html='';
+  const remaining=catQs.filter(q=>!q.recorded).length;
+  if(remaining>0){
+    html+=`<button class="btn-fast" onclick="startFastCategory('${cat}')">🎙️ تسجيل سريع (${remaining} متبقي)</button>`;
+  }
+  if(!hasSubgroups){
+    html+='<div class="section"><h2>الأسئلة</h2>';
+    for(const q of catQs) html+=questionRowHTML(q);
+    html+='</div>';
+  }else{
+    const items={};
+    for(const q of catQs){
+      const sg=q.subgroup;
+      if(!items[sg]) items[sg]={name:q.subgroup_ar,questions:[]};
+      items[sg].questions.push(q);
+    }
+    html+='<div class="item-list">';
+    for(const sg of Object.keys(items)){
+      const it=items[sg]; const done=it.questions.filter(x=>x.recorded).length;
+      const isDone=done===it.questions.length;
+      html+=`<div class="item-card ${isDone?'done':''}" onclick="openItem('${cat}','${sg}')">
+        <div class="item-name">${it.name}</div>
+        <div class="item-count">${done}/${it.questions.length} ${isDone?'✅':''}</div>
+      </div>`;
+    }
+    html+='</div>';
+  }
+  v.innerHTML=html;
+}
+function openItem(cat,item){state.level='item';state.cat=cat;state.item=item;render();}
+function renderItem(cat,item){
+  const qs=ALL.filter(q=>q.category===cat&&q.subgroup===item);
+  const name=qs[0]?.subgroup_ar||item;
+  document.getElementById('pageTitle').textContent=name;
+  const v=document.getElementById('view');
+  let html='';
+  const remaining=qs.filter(q=>!q.recorded).length;
+  if(remaining>0){
+    html+=`<button class="btn-fast" onclick="startFastItem('${cat}','${item}')">🎙️ تسجيل سريع (${remaining} متبقي)</button>`;
+  }
+  html+='<div class="section"><h2>الأسئلة</h2>';
+  for(const q of qs) html+=questionRowHTML(q);
+  html+='</div>';
+  v.innerHTML=html;
+}
+function questionRowHTML(q){
+  return `<div class="q-row ${q.recorded?'done':''}">
+    <div class="q-info">
+      <div class="q-text">${q.recorded?'✅ ':'⚪ '}${q.text_ar}</div>
+      <div class="q-meta">${q.recorded?'مسجل '+(q.duration_ms/1000).toFixed(1)+'s':'غير مسجل'}</div>
+    </div>
+    <div class="q-btns">
+      <button class="btn-play" ${q.recorded?'':'disabled'} onclick="playExisting('${q.key}')">🔊</button>
+      <button class="btn-rec" onclick="recordOne('${q.key}')">${q.recorded?'🔄':'⏺'}</button>
+      ${q.recorded?`<button class="btn-del" onclick="deleteVoice('${q.key}',event)">🗑</button>`:''}
+    </div>
+  </div>`;
+}
+function playExisting(key){
+  const q=ALL.find(x=>x.key===key);
+  if(!q||!q.path)return;
+  const a=new Audio(q.path);
+  a.play().catch(e=>alert('تعذر التشغيل: '+e.message));
+}
+async function deleteVoice(key,ev){
+  ev.stopPropagation();
+  if(!confirm('حذف التسجيل؟'))return;
+  try{
+    const res=await fetch('/api/voices/delete/'+encodeURIComponent(key),{method:'DELETE'});
+    if(res.ok){await 
+function openZoom(){document.getElementById('zoomOverlay').classList.add('active');}
+function closeZoom(){document.getElementById('zoomOverlay').classList.remove('active');}
+
+loadData();}
+    else alert('فشل الحذف');
+  }catch(e){alert('خطأ: '+e.message);}
+}
+function recordOne(key){recQueue=[key];recIdx=0;openCurrent();}
+function startFastItem(cat,item){
+  const qs=ALL.filter(q=>q.category===cat&&q.subgroup===item&&!q.recorded);
+  recQueue=qs.map(q=>q.key);recIdx=0;
+  if(!recQueue.length)return;
+  openCurrent();
+}
+function startFastCategory(cat){
+  const qs=ALL.filter(q=>q.category===cat&&!q.recorded);
+  recQueue=qs.map(q=>q.key);recIdx=0;
+  if(!recQueue.length)return;
+  openCurrent();
+}
+function startFastAll(){
+  const qs=ALL.filter(q=>!q.recorded);
+  recQueue=qs.map(q=>q.key);recIdx=0;
+  if(!recQueue.length){alert('كل الأسئلة مسجلة! 🎉');return;}
+  openCurrent();
+}
+async function openCurrent(){
+  if(recIdx>=recQueue.length){closeRecorder();await 
+function openZoom(){document.getElementById('zoomOverlay').classList.add('active');}
+function closeZoom(){document.getElementById('zoomOverlay').classList.remove('active');}
+
+loadData();return;}
+  pendingKey=recQueue[recIdx];
+  const q=ALL.find(x=>x.key===pendingKey);
+  if(!q){recIdx++;return openCurrent();}
+  const overlay=document.getElementById('recorderOverlay');
+  overlay.classList.add('active');
+  document.getElementById('recQuestionText').textContent=q.text_ar;
+  document.getElementById('zoomText').textContent=q.text_ar;
+  document.getElementById('queueInfo').textContent=recQueue.length>1?`${recIdx+1} من ${recQueue.length}`:'';
+  document.getElementById('recLiveControls').style.display='flex';
+  document.getElementById('recPlaybackControls').style.display='none';
+  document.getElementById('recTimer').textContent='0.0s';
+  document.getElementById('levelBar').style.width='0%';
+  curBlob=null;
+  const cd=document.getElementById('recCountdown');
+  cd.style.display='block';
+  for(let i=3;i>0;i--){
+    cd.textContent=i;
+    await sleep(800);
+  }
+  cd.style.display='none';
+  try{await startRecording();}
+  catch(e){alert('تعذر فتح المايك: '+e.message+'\n\nتأكد من:\n1) السماح بالمايك في المتصفح\n2) HTTPS أو localhost');closeRecorder();}
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function pickMime(){
+  const types=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+  for(const t of types){if(window.MediaRecorder&&MediaRecorder.isTypeSupported(t))return t;}
+  return '';
+}
+function extFromMime(m){
+  if(m.includes('webm'))return'webm';
+  if(m.includes('mp4'))return'mp4';
+  if(m.includes('ogg'))return'ogg';
+  return'webm';
+}
+async function startRecording(){
+  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  const mime=pickMime();
+  curExt=extFromMime(mime);
+  const opts=mime?{mimeType:mime}:{};
+  mediaRecorder=new MediaRecorder(stream,opts);
+  chunks=[];
+  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+  mediaRecorder.onstop=handleStop;
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const src=audioCtx.createMediaStreamSource(stream);
+  analyser=audioCtx.createAnalyser();
+  analyser.fftSize=256;
+  src.connect(analyser);
+  mediaRecorder.start();
+  startTime=Date.now();
+  updateLevel();updateTimer();
+}
+function updateLevel(){
+  if(!analyser)return;
+  const data=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  let sum=0;for(let i=0;i<data.length;i++)sum+=data[i];
+  const avg=sum/data.length;
+  const level=Math.min(100,avg*3);
+  const bar=document.getElementById('levelBar');
+  bar.style.width=level+'%';
+  bar.style.background=level>60?'#ef4444':level>25?'#fbbf24':'#10b981';
+  rafId=requestAnimationFrame(updateLevel);
+}
+function updateTimer(){
+  if(!startTime)return;
+  const s=(Date.now()-startTime)/1000;
+  document.getElementById('recTimer').textContent=s.toFixed(1)+'s';
+  if(s>20){stopRecording();return;}
+  timerId=setTimeout(updateTimer,100);
+}
+function stopRecording(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  if(rafId)cancelAnimationFrame(rafId);rafId=null;
+  if(timerId)clearTimeout(timerId);timerId=null;
+  if(audioCtx){audioCtx.close();audioCtx=null;}
+  analyser=null;
+  curDuration=Date.now()-startTime;
+  startTime=0;
+}
+function handleStop(){
+  curBlob=new Blob(chunks,{type:chunks[0]?.type||'audio/webm'});
+  const url=URL.createObjectURL(curBlob);
+  const audio=document.getElementById('playbackAudio');
+  audio.src=url;
+  document.getElementById('recLiveControls').style.display='none';
+  document.getElementById('recPlaybackControls').style.display='block';
+  document.getElementById('recTimer').textContent=(curDuration/1000).toFixed(1)+'s';
+  audio.play().catch(()=>{});
+}
+function reRecord(){curBlob=null;openCurrent();}
+async function saveRecording(){
+  if(!curBlob){alert('لا يوجد تسجيل');return;}
+  const fd=new FormData();
+  fd.append('key',pendingKey);
+  fd.append('speaker','dad');
+  fd.append('ext',curExt);
+  fd.append('duration_ms',curDuration);
+  fd.append('audio',curBlob,`${pendingKey}.${curExt}`);
+  try{
+    const res=await fetch('/api/voices/save',{method:'POST',body:fd});
+    const data=await res.json();
+    if(data.status==='success'){
+      const q=ALL.find(x=>x.key===pendingKey);
+      if(q){q.recorded=true;q.path=data.path;q.duration_ms=curDuration;}
+      recomputeStats();updateStats();
+      recIdx++;
+      if(recIdx<recQueue.length)openCurrent();
+      else{closeRecorder();render();}
+    }else{alert('فشل: '+(data.message||''));}
+  }catch(e){alert('خطأ: '+e.message);}
+}
+function skipQuestion(){
+  curBlob=null;
+  recIdx++;
+  if(recIdx<recQueue.length)openCurrent();
+  else{closeRecorder();render();}
+}
+function closeRecorder(){
+  document.getElementById('recorderOverlay').classList.remove('active');
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  if(rafId)cancelAnimationFrame(rafId);rafId=null;
+  if(timerId)clearTimeout(timerId);timerId=null;
+  if(audioCtx){audioCtx.close();audioCtx=null;}
+  mediaRecorder=null;chunks=[];curBlob=null;pendingKey=null;
+  recQueue=[];recIdx=0;
+}
+function recomputeStats(){
+  for(const k of Object.keys(STATS))STATS[k].done=0;
+  for(const q of ALL)if(q.recorded&&STATS[q.category])STATS[q.category].done++;
+}
+
+function openZoom(){document.getElementById('zoomOverlay').classList.add('active');}
+function closeZoom(){document.getElementById('zoomOverlay').classList.remove('active');}
+
+loadData();
+</script>
+
+<div id="zoomOverlay">
+  <button class="zoom-close" onclick="closeZoom()">✖ إغلاق</button>
+  <div class="zoom-text" id="zoomText"></div>
+</div>
+</body>
+</html>

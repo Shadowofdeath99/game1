@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+
+# Backups
+*.bak
+*.bak.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+*.log
+*.tmp
+
+# ngrok
+ngrok.yml
+
+# Binary installers (لا تُرفع)
+*.deb
+*.AppImage
+*.exe
+*.dmg
+*.rpm
