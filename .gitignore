@@ -33,3 +33,8 @@ ngrok.yml
 *.exe
 *.dmg
 *.rpm
+
+# قوالب backup
+templates/*.bak*
+*.bak.*
+*.bak[0-9]*
